@@ -49,8 +49,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         }
 
         do {
-            // 64 GB disk space.
-            try mainDiskFileHandle.truncate(atOffset: 64 * 1024 * 1024 * 1024)
+            // 10 GB disk space.
+            try mainDiskFileHandle.truncate(atOffset: 10 * 1024 * 1024 * 1024)
         } catch {
             fatalError("Failed to truncate the main disk image.")
         }
