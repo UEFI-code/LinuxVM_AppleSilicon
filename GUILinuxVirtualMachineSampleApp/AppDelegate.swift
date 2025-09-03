@@ -75,15 +75,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     }
 
     private func createUSBMassStorageDeviceConfiguration() -> VZUSBMassStorageDeviceConfiguration {
-    let intallerDiskAttachment = try! VZDiskImageStorageDeviceAttachment(url: installerISOPath!, readOnly: true)
-
+        let intallerDiskAttachment = try! VZDiskImageStorageDeviceAttachment(url: installerISOPath!, readOnly: true)
         return VZUSBMassStorageDeviceConfiguration(attachment: intallerDiskAttachment)
     }
 
     private func createNetworkDeviceConfiguration() -> VZVirtioNetworkDeviceConfiguration {
         let networkDevice = VZVirtioNetworkDeviceConfiguration()
         networkDevice.attachment = VZNATNetworkDeviceAttachment()
-
         return networkDevice
     }
 
@@ -194,13 +192,6 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         NSApp.activate(ignoringOtherApps: true)
         selectVMDirectory()
-        needsInstall = !FileManager.default.fileExists(atPath: diskImagePath())
-        promptForConfig()
-        if needsInstall {
-            createMainDiskImage(sizeGB: newDiskSizeGB)
-            selectISO()
-        }
-        configureAndStartVirtualMachine()
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
@@ -231,15 +222,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         panel.canCreateDirectories = true
         panel.prompt = "Choose"
         panel.message = "Choose VM storage path"
-        var done = false
         panel.begin { r in
             if r != .OK { fatalError("You didn't choose a path") }
             self.vmDirectoryURL = panel.url!
-            done = true
-        }
-        // wait for panel finish
-        while !done {
-            RunLoop.current.run(mode: .default, before: Date.distantFuture)
+            self.needsInstall = !FileManager.default.fileExists(atPath: self.diskImagePath())
+            self.promptForConfig()
+            if self.needsInstall {
+                self.createMainDiskImage(sizeGB: self.newDiskSizeGB)
+                self.selectISO()
+            }
+            else {
+                self.configureAndStartVirtualMachine()
+            }
         }
     }
 
@@ -315,15 +309,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, VZVirtualMachineDelegate {
         openPanel.allowsMultipleSelection = false
         openPanel.prompt = "Choose ISO"
         openPanel.message = "Choose installation ISO file"
-        var done = false
         openPanel.begin { r in
             if r != .OK { fatalError("No ISO selected") }
             self.installerISOPath = openPanel.url!
-            done = true
-        }
-        // wait for user to select ISO
-        while !done {
-            RunLoop.current.run(mode: .default, before: Date.distantFuture)
+            self.configureAndStartVirtualMachine()
         }
     }
 }
